@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Search for .tex files in the current directory
+TEX_FILES=(*.tex)
+
+# Check the number of .tex files found
+if [ ${#TEX_FILES[@]} -eq 1 ]; then
+    TEX_FILE="${TEX_FILES[0]}"
+    echo "Found .tex file: $TEX_FILE"
+elif [ ${#TEX_FILES[@]} -eq 0 ]; then
+    echo "Error: No .tex file found in the current directory."
+    exit 1
+else
+    echo "Error: Multiple .tex files found. Please specify one file manually."
+    exit 1
+fi
+
+# Directories for output and temporary files
+OUTPUT_DIR="./output"
+TEMP_DIR="./temp"
+LOG_DIR="./log"
+
+# Create output, temporary, and log directories
+mkdir -p "$OUTPUT_DIR" "$TEMP_DIR" "$LOG_DIR"
+
+# 1. Clean up the temporary directory
+echo "Cleaning up the temporary directory..."
+rm -f "$TEMP_DIR"/*
+
+# 2. Compile the LaTeX file
+echo "Compiling $TEX_FILE with xelatex..."
+
+# Run xelatex in non-interactive mode, output files to the temp directory, log to the log directory
+xelatex -interaction=nonstopmode -output-directory="$TEMP_DIR" "$TEX_FILE" > "$LOG_DIR/latex.log" 2>&1
+
+# 3. Process bibliography with bibtex or biber
+TEX_BASENAME="$(basename "$TEX_FILE" .tex)"
+# echo "Processing bibliography with bibtex..."
+# bibtex "$TEMP_DIR/$TEX_BASENAME" > "$LOG_DIR/bibtex.log" 2>&1
+echo "Processing bibliography with biber..."
+if [ -f database.bib ]; then
+  echo "Found database.bib, proceeding with biber."
+  cp database.bib "$TEMP_DIR/"
+fi
+(cd "$TEMP_DIR" && biber "$TEX_BASENAME") > "$LOG_DIR/biber.log" 2>&1
+
+# 4. Run xelatex again to update references
+echo "Running xelatex for the second pass..."
+xelatex -interaction=nonstopmode -output-directory="$TEMP_DIR" "$TEX_FILE" > "$LOG_DIR/latex2.log" 2>&1
+
+# 5. Final xelatex pass to ensure cross-references are resolved
+echo "Running xelatex for the final pass..."
+xelatex -interaction=nonstopmode -output-directory="$TEMP_DIR" "$TEX_FILE" > "$LOG_DIR/latex3.log" 2>&1
+
+# 6. Move the generated PDF to the output directory
+mv "$TEMP_DIR/$TEX_BASENAME.pdf" "$OUTPUT_DIR/" || {
+    echo "[ERROR] Failed to move PDF. Check if compilation was successful."
+    exit 1
+}
+
+echo "Compilation complete. The PDF file has been saved to $OUTPUT_DIR."

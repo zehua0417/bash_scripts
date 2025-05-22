@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+  echo "Usage: open <filename>"
+  return 1
+fi
+
+if [[ ! -e "$1" ]]; then
+  echo "Error: File '$1' does not exist."
+  return 1
+fi
+
+# Detect the operating system
+xdg-open "$1"

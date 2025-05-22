@@ -1,0 +1,26 @@
+#!/bin/bash
+
+MAILDIR="$HOME/Mail"  # 根据你的实际路径修改
+
+# 获取同步前的邮件数
+BEFORE=$(find "$MAILDIR" -type f -path "*/new/*" | wc -l)
+
+echo "[DEBUG] 邮件同步前：$BEFORE 封邮件"
+
+# 执行同步
+mbsync -a
+EXIT_CODE=$?
+
+# 获取同步后的邮件数
+AFTER=$(find "$MAILDIR" -type f -path "*/new/*" | wc -l)
+
+echo "[DEBUG] 邮件同步后：$AFTER 封邮件，mbsync 退出码：$EXIT_CODE"
+
+if [ "$AFTER" -gt "$BEFORE" ]; then
+    NEW=$((AFTER - BEFORE))
+    notify-send "📬 新邮件到达" "你有 $NEW 封新邮件"
+else
+    echo "[DEBUG] 没有新邮件"
+fi
+
+exit $EXIT_CODE

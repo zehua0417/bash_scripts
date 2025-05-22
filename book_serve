@@ -1,0 +1,5 @@
+#!/bin/bash
+
+calibre-server /home/lihuax/Onedrive/work/calibreLib \
+  --port 8080 \
+  --enable-auth

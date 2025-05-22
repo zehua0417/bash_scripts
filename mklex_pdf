@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# 在当前目录寻找.tex文件
+TEX_FILES=(*.tex)
+
+# 检查找到的.tex文件数量
+if [ ${#TEX_FILES[@]} -eq 1 ]; then
+    TEX_FILE="${TEX_FILES[0]}"
+    echo "找到.tex文件：$TEX_FILE"
+elif [ ${#TEX_FILES[@]} -eq 0 ]; then
+    echo "错误：当前目录下未找到.tex文件。"
+    exit 1
+else
+    echo "错误：找到多个.tex文件，请手动指定文件。"
+    exit 1
+fi
+
+# 输出与临时文件夹
+OUTPUT_DIR="./output"
+TEMP_DIR="./temp"
+LOG_DIR="./log"
+
+# 创建输出、临时和日志目录
+mkdir -p "$OUTPUT_DIR" "$TEMP_DIR" "$LOG_DIR"
+
+# 1. 清理临时目录
+echo "清理临时目录..."
+rm -f "$TEMP_DIR"/*
+
+# 2. 使用pdflatex编译LaTeX文件
+echo "用pdflatex编译 $TEX_FILE..."
+
+# pdflatex，非交互模式，输出到临时目录，日志记录
+pdflatex -interaction=nonstopmode -output-directory="$TEMP_DIR" "$TEX_FILE" > "$LOG_DIR/latex1.log" 2>&1
+
+# 3. 用bibtex处理参考文献
+echo "使用bibtex处理参考文献..."
+BASENAME="$(basename "$TEX_FILE" .tex)"
+(   
+    cd "$TEMP_DIR" && \
+    bibtex "$BASENAME" > "../$LOG_DIR/bibtex.log" 2>&1
+)
+
+# 4. 第二遍pdflatex，更新交叉引用
+echo "第二次运行pdflatex，更新交叉引用..."
+pdflatex -interaction=nonstopmode -output-directory="$TEMP_DIR" "$TEX_FILE" > "$LOG_DIR/latex2.log" 2>&1
+
+# 5. 最后一遍pdflatex，确保所有引用正确
+echo "最后一次运行pdflatex，确保交叉引用正确..."
+pdflatex -interaction=nonstopmode -output-directory="$TEMP_DIR" "$TEX_FILE" > "$LOG_DIR/latex3.log" 2>&1
+
+# 6. 移动生成的PDF到输出目录
+mv "$TEMP_DIR/$BASENAME.pdf" "$OUTPUT_DIR/"
+
+echo "编译完成。PDF文件已保存到 $OUTPUT_DIR。"
+

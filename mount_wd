@@ -1,0 +1,31 @@
+#!/bin/bash
+
+MOUNT_POINT="/run/media/lihuax/lihuax_WD_BLACK"
+DEVICE="/dev/sda1"
+
+# 检查设备是否存在
+if ! lsblk | grep -q "$(basename $DEVICE)"; then
+    echo "❌ 错误：设备 $DEVICE 不存在，请检查硬盘是否连接！"
+    exit 1
+fi
+
+# 检查挂载点是否存在，不存在则创建
+if [ ! -d "$MOUNT_POINT" ]; then
+    echo "📂 挂载目录不存在，正在创建：$MOUNT_POINT"
+    sudo mkdir -p "$MOUNT_POINT"
+fi
+
+# 检查是否已经挂载
+if mount | grep -q "$MOUNT_POINT"; then
+    echo "✅ $MOUNT_POINT 已经挂载，无需重复挂载。"
+    exit 0
+fi
+
+# 挂载 NTFS 分区
+echo "🔄 正在挂载 $DEVICE 到 $MOUNT_POINT..."
+if sudo mount -t ntfs-3g "$DEVICE" "$MOUNT_POINT"; then
+    echo "✅ 挂载成功！"
+else
+    echo "❌ 挂载失败，请检查设备状态或运行 'sudo ntfsfix $DEVICE' 修复。"
+    exit 1
+fi

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 查找图片文件
+# file=$(find ~/Pictures/wallpapers -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) | fzf --preview 'chafa -s ${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES} {}')
+
+file=$(find ~/Pictures/wallpapers -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \) | fzf --preview='~/Documents/bin/preview {}')
+
+echo "选择的文件：$file"
+
+# 如果选择了文件，则设置为壁纸
+if [[ -n "$file" ]]; then
+  # hyprctl hyprpaper unload all
+  # hyprctl hyprpaper preload "$file"
+  # hyprctl hyprpaper wallpaper "eDP-1,$file"
+  # hyprctl hyprpaper reload
+  hyprctl hyprpaper reload ,"$file"
+  # swww img "$file"
+  echo "壁纸已设置为：$file"
+else
+  echo "未选择文件。"
+fi
+

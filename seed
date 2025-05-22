@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# magget: 一个封装 aria2c 的磁力链接下载器，自动走代理 + 添加 tracker + 日志 + 优雅输出
+
+# ===================== ⚙️ 配置部分 =====================
+# 下载保存目录（可修改）
+DOWNLOAD_DIR="$HOME/Downloads/magget"
+# HTTP/HTTPS 代理地址（用于替代 all-proxy，因为 aria2 不支持 socks5h:// 的 all-proxy）
+HTTP_PROXY="http://127.0.0.1:7890"
+# 默认 tracker 列表（可自定义）
+TRACKERS=$(cat <<EOF
+udp://tracker.opentrackr.org:1337/announce, udp://open.demonii.com:1337/announce, udp://tracker.torrent.eu.org:451/announce, udp://open.stealth.si:80/announce, udp://explodie.org:6969/announce, udp://exodus.desync.com:6969/announce, udp://tracker-udp.gbitt.info:80/announce, udp://open.free-tracker.ga:6969/announce, http://tracker810.xyz:11450/announce, udp://wepzone.net:6969/announce, udp://tracker.tiny-vps.com:6969/announce, udp://tracker.srv00.com:6969/announce, udp://tracker.qu.ax:6969/announce, udp://tracker.filemail.com:6969/announce, udp://tracker.edkj.club:6969/announce, udp://tracker.dump.cl:6969/announce, udp://tracker.dler.org:6969/announce, udp://tracker.bittor.pw:1337/announce, udp://tracker.0x7c0.com:6969/announce, udp://retracker01-msk-virt.corbina.net:80/announce
+EOF
+)
+# 日志文件
+LOG_FILE="$HOME/.magget.log"
+
+# ===================== 🧠 函数定义 =====================
+print_usage() {
+  echo -e "\n\033[1;34mUsage:\033[0m"
+  echo "  magget <magnet_link>"
+  echo -e "\nExample:"
+  echo "  magget 'magnet:?xt=urn:btih:xxxx...'"
+}
+
+# ===================== 🚀 启动下载 =====================
+main() {
+  if [[ -z "$1" ]]; then
+    print_usage
+    exit 1
+  fi
+
+  MAGNET_LINK="$1"
+  mkdir -p "$DOWNLOAD_DIR"
+  echo -e "\n\033[1;32m[magget] 开始下载：\033[0m$MAGNET_LINK"
+  echo "[magget] 下载目录：$DOWNLOAD_DIR"
+
+  aria2c \
+    --dir="$DOWNLOAD_DIR" \
+    --enable-dht=true \
+    --max-connection-per-server=16 \
+    --split=64 \
+    --min-split-size=1M \
+    --bt-enable-lpd=true \
+    --bt-tracker="$TRACKERS" \
+    --http-proxy="$HTTP_PROXY" \
+    --https-proxy="$HTTP_PROXY" \
+    --summary-interval=5 \
+    --console-log-level=notice \
+    --user-agent="magget/1.0" \
+    --file-allocation=none \
+    "$MAGNET_LINK" | tee -a "$LOG_FILE"
+}
+
+main "$1"

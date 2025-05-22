@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# 设置变量
+REMOTE_NAME="Onedrive"
+LOCAL_DIR="$HOME/Disks/C/OneDrive"
+
+mkdir -p "$LOCAL_DIR"
+
+rclone sync "${REMOTE_NAME}:" "$LOCAL_DIR" \
+  --config="$HOME/.config/rclone/rclone.conf" \
+  --progress \
+  --transfers 16 \
+  --checkers 16 \
+  --drive-chunk-size 512M \
+  --tpslimit 10 \
+  --fast-list \
+  --no-update-modtime \
+  --log-level INFO \
+  --log-file="$HOME/Documents/logs/rclone_sync.log" \
+  --exclude="image/**" \
+  --exclude="work/ppt模板/**" \
+  --exclude="work/GitHub/author/**" \
+  --exclude="study/programing/**" \
+  --exclude="work/code/ino_Project/**" \
+  --exclude=".Trash-*/**" \
+  --exclude=".DS_Store" \
+  --exclude="**.tmp" \
+  --exclude="**.log" \
+  --exclude="**~"
