@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# 🗂️ Define local and remote root directories
+LOCAL_BASE="/run/media/lihuax/C/OneDrive"
+REMOTE_BASE="Onedrive:"
+
+# 📍Get the absolute path of the current directory
+CURRENT_DIR="$(realpath "$(pwd)")"
+
+# 🚨Ensure the current directory is under LOCAL_BASE
+if [[ "$CURRENT_DIR" != $LOCAL_BASE* ]]; then
+    echo "❌ The current directory is not under $LOCAL_BASE. Sync aborted."
+    notify-send "❌ Sync Failed" "Current directory is outside $LOCAL_BASE"
+    exit 1
+fi
+
+# ✂️ Compute the relative path from the base
+RELATIVE_PATH="${CURRENT_DIR#$LOCAL_BASE/}"
+
+# ☁️ Construct the remote path
+REMOTE_PATH="$REMOTE_BASE$RELATIVE_PATH"
+
+# 📄 Log file
+LOG_FILE="$HOME/Documents/logs/rclone_sync_download.log"
+
+echo "☁️ Remote source: $REMOTE_PATH"
+echo "📂 Local target:  $CURRENT_DIR"
+echo "🔄 Starting sync from OneDrive..."
+echo "📝 Logging to: $LOG_FILE"
+
+# 🚀 Run rclone in background and notify upon completion
+(
+  rclone sync "$REMOTE_PATH" "$CURRENT_DIR" \
+    --config="$HOME/.config/rclone/rclone.conf" \
+    --progress \
+    --transfers 16 \
+    --checkers 16 \
+    --drive-chunk-size 512M \
+    --tpslimit 10 \
+    --fast-list \
+    --log-level INFO \
+    --log-file="$LOG_FILE"
+
+  if [[ $? -eq 0 ]]; then
+    notify-send "✅ Rclone Sync Completed" "Synced from $REMOTE_PATH"
+  else
+    notify-send "❌ Rclone Sync Failed" "Check the log: $LOG_FILE"
+  fi
+) > /dev/null 2>&1 &
+
+echo "✅ Sync started in background (PID $!)."
+

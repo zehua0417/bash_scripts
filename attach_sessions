@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# 获取所有 window 列表并通过 wofi 选择
+selection=$(tmux list-windows -a | wofi -dmenu -i -p "Choose a tmux window")
+
+# 如果用户取消选择，退出
+[ -z "$selection" ] && exit
+
+# 提取 session:window 编号（即冒号前两个字段）
+target=$(echo "$selection" | awk -F: '{print $1 ":" $2}')
+
+# 执行 attach（已经在 tmux 中的话可以切换）
+# if [ -n "$TMUX" ]; then
+#   tmux switch-client -t "$target"
+# else
+  # 使用 Kitty 打开新终端，并 attach 到目标 tmux window
+kitty --detach tmux attach -t "$target"
+# fi
+
+
+
+# #!/bin/bash
+#
+# # 从所有 tmux window 中选择
+# selection=$(tmux list-windows -a | wofi -dmenu -i -p "Choose a tmux window")
+#
+# # 用户取消则退出
+# [ -z "$selection" ] && exit
+#
+# # 提取 session:window 格式
+# target=$(echo "$selection" | awk -F: '{print $1 ":" $2}')
+#

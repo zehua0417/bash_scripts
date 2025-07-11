@@ -35,14 +35,14 @@ xelatex -interaction=nonstopmode -output-directory="$TEMP_DIR" "$TEX_FILE" > "$L
 
 # 3. Process bibliography with bibtex or biber
 TEX_BASENAME="$(basename "$TEX_FILE" .tex)"
-# echo "Processing bibliography with bibtex..."
-# bibtex "$TEMP_DIR/$TEX_BASENAME" > "$LOG_DIR/bibtex.log" 2>&1
-echo "Processing bibliography with biber..."
-if [ -f database.bib ]; then
-  echo "Found database.bib, proceeding with biber."
-  cp database.bib "$TEMP_DIR/"
-fi
-(cd "$TEMP_DIR" && biber "$TEX_BASENAME") > "$LOG_DIR/biber.log" 2>&1
+echo "Processing bibliography with bibtex..."
+bibtex "$TEMP_DIR/$TEX_BASENAME" > "$LOG_DIR/bibtex.log" 2>&1
+# echo "Processing bibliography with biber..."
+# if [ -f database.bib ]; then
+#   echo "Found database.bib, proceeding with biber."
+#   cp database.bib "$TEMP_DIR/"
+# fi
+# (cd "$TEMP_DIR" && biber "$TEX_BASENAME") > "$LOG_DIR/biber.log" 2>&1
 
 # 4. Run xelatex again to update references
 echo "Running xelatex for the second pass..."

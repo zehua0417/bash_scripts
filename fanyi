@@ -1,0 +1,21 @@
+#!/bin/bash
+
+WLP="/usr/bin/wl-paste"
+TRANS="/usr/bin/trans"
+
+text=$($WLP --no-newline | sed '/^\s*$/d' | head -n 1)
+
+if [[ -z "$text" ]]; then
+  notify-send "剪贴板为空" "没有可翻译内容"
+  exit 1
+fi
+
+# 判断是否包含中文
+if echo "$text" | grep -qP '[\p{Han}]'; then
+  direction="zh:en"
+else
+  direction="en:zh"
+fi
+
+# 最终执行 kitty 弹窗翻译
+kitty --class trans -e bash -c "$TRANS $direction -b \"$text\"; echo; read -n 1 -s -r -p 'Press any key to close...'"

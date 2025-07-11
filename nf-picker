@@ -1,0 +1,3 @@
+#! /bin/bash
+
+cat "/home/lihuax/.config/nerdfont.txt" | wofi -dmenu -i | awk '{print $1}' | wl-copy  
